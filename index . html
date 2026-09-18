@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BGMI Arena</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e293b">
 <style>
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: white; -webkit-font-smoothing: antialiased; }
@@ -452,57 +454,4 @@ import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc
 
 const firebaseConfig = {
     apiKey: "AIzaSyB0w2hQEsJdhyz02A9iK5seyNqMIs77jj0",
-    authDomain: "bgmi-arena-71a11.firebaseapp.com",
-    projectId: "bgmi-arena-71a11",
-    storageBucket: "bgmi-arena-71a11.firebasestorage.app",
-    messagingSenderId: "983255287969",
-    appId: "1:983255287969:web:af110665c18c77b15848e0",
-    measurementId: "G-5LHHV8X4DS"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-window.saveToFirebase = async function(name, roomName, roomId, password, entryFee) {
-    try {
-        await addDoc(collection(db, "joinedPlayers"), {
-            name: name, roomName: roomName, roomId: roomId,
-            password: password, entryFee: entryFee, timestamp: new Date()
-        });
-        console.log("✅ Data Saved!");
-    } catch (e) { console.error("❌ Error:", e); }
-};
-
-window.saveResultToFirebase = async function(player1, player2, winner) {
-    try {
-        await addDoc(collection(db, "matchResults"), {
-            player1: player1, player2: player2, winner: winner,
-            status: "pending", timestamp: new Date()
-        });
-        console.log("✅ Result Saved!");
-    } catch (e) { console.error("❌ Error:", e); }
-};
-
-window.getPendingResults = async function() {
-    var results = [];
-    try {
-        var q = query(collection(db, "matchResults"), where("status", "==", "pending"));
-        var snap = await getDocs(q);
-        snap.forEach(function(d) {
-            var data = d.data();
-            results.push({ id: d.id, player1: data.player1, player2: data.player2, winner: data.winner });
-        });
-    } catch (e) { console.error("❌ Error:", e); }
-    return results;
-};
-
-window.updateResultStatus = async function(id, status) {
-    try {
-        await updateDoc(doc(db, "matchResults", id), { status: status });
-        console.log("✅ Result " + status);
-    } catch (e) { console.error("❌ Error:", e); }
-};
-</script>
-
-</body>
-</html>
+    authDomain: "bgmi-arena-71a11.firebaseapp.com
