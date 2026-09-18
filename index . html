@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BGMI Arena</title>
+<style>
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: white; -webkit-font-smoothing: antialiased; }
+header { background: #1e293b; padding: 16px; text-align: center; }
+header h1 { margin: 0; font-size: 24px; }
+.container { max-width: 600px; margin: auto; padding: 12px; }
+.card { background: #1e293b; padding: 16px; margin-bottom: 12px; border-radius: 15px; }
+h2 { text-align: center; margin-top: 0; font-size: 19px; }
+input { width: 100%; padding: 13px; margin: 6px 0; border: 0; border-radius: 8px; font-size: 15px; background: #273449; color: white; outline: none; }
+input:focus { outline: 2px solid #2563eb; }
+button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 8px; background: #2563eb; color: white; font-size: 15px; font-weight: 600; transition: transform 0.1s ease; }
+button:active { transform: scale(0.98); opacity: 0.9; }
+.hidden { display: none !important; }
+.profile { background: #312e81; }
+.logout { background: #dc2626; }
+.room { background: #273449; padding: 14px; margin-top: 12px; border-radius: 12px; }
+.room h3 { margin-top: 0; font-size: 15px; }
+.info { color: #cbd5e1; line-height: 1.7; font-size: 13px; }
+.join { background: #16a34a; }
+.notice { text-align: center; color: #94a3b8; font-size: 12px; margin-top: 12px; }
+.game-btn { padding: 18px; font-size: 15px; border-radius: 10px; text-align: center; font-weight: 600; }
+.btn-blue { background: #2563eb; }
+.btn-green { background: #16a34a; }
+.btn-yellow { background: #ca8a04; }
+.mode-btn, .map-btn, .entry-btn { background: #273449; padding: 10px; font-size: 12px; border: 1px solid #475569; border-radius: 8px; color: white; }
+.mode-btn.active, .map-btn.active, .entry-btn.active { background: #2563eb; border-color: #2563eb; }
+.winner-tab { background: #273449; padding: 10px; font-size: 13px; border: 1px solid #475569; border-radius: 8px; color: white; }
+.winner-tab.active { background: #2563eb; border-color: #2563eb; }
+.winner-btn { background: #475569; padding: 6px 16px; border-radius: 8px; color: white; border: none; font-size: 12px; }
+.winner-btn.active { background: #22c55e; }
+.timer-text { text-align: center; color: #f59e0b; font-size: 40px; margin: 5px 0; font-weight: bold; }
+.lb-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; }
+.lb-rank { width: 35px; font-weight: bold; color: #f59e0b; }
+.lb-name { flex: 1; font-size: 14px; }
+.lb-wins { color: #22c55e; font-size: 13px; margin-right: 10px; }
+.lb-points { color: #60a5fa; font-weight: bold; font-size: 13px; }
+.team-slot { background: #273449; border: 2px dashed #475569; padding: 12px; border-radius: 10px; text-align: center; font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
+.team-slot.filled { border-style: solid; border-color: #22c55e; color: white; }
+.result-row { background: #273449; padding: 12px; border-radius: 10px; margin-bottom: 8px; }
+.result-row .row-top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
+.result-row .row-bottom { display: flex; gap: 8px; }
+.result-row button { padding: 8px; font-size: 12px; margin-top: 0; }
+</style>
+</head>
+<body>
+
+<header><h1>🎮 BGMI ARENA</h1></header>
+
+<div class="container">
+
+<div class="card" id="loginBox">
+<h2>🔐 Login / Register</h2>
+<input type="text" id="username" placeholder="Enter your name">
+<button onclick="login()">Login / Register</button>
+<button style="background:#475569;" onclick="showAdminLogin()">🛠️ Admin Login</button>
+<div class="notice">Demo login — no real account system yet</div>
+</div>
+
+<div class="card hidden" id="adminLoginBox">
+<h2>🛠️ Admin Login</h2>
+<input type="password" id="adminPassword" placeholder="Enter admin password">
+<button onclick="adminLogin()">Login</button>
+<button style="background:#475569;" onclick="showMainPage()">⬅️ Back</button>
+<div class="notice">Hint: admin123</div>
+</div>
+
+<div class="card hidden" id="joinPage">
+<h2>🎮 Join Room</h2>
+<p>Room: <b id="joinRoomName"></b></p>
+<p>💰 Entry Fee: <b id="joinEntryFee"></b></p>
+<p>🆔 Room ID: <b id="joinRoomId"></b></p>
+<p>🔑 Password: <b id="joinPassword"></b></p>
+<button onclick="backToMain()">⬅️ Back</button>
+</div>
+
+<div class="card hidden" id="battle1v1Page">
+<h2>⚔️ 1v1 BATTLE</h2>
+<p style="text-align:center; color:#94a3b8; margin-top:-10px;">PROVE YOUR SKILLS</p>
+<div style="margin-top:12px;">
+<p style="font-weight:bold; font-size:14px;">Select Mode:</p>
+<div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:6px;">
+<button class="mode-btn active" onclick="selectMode('TDM', this)">TDM</button>
+<button class="mode-btn" onclick="selectMode('Classic', this)">Classic</button>
+<button class="mode-btn" onclick="selectMode('Sniper', this)">Sniper</button>
+<button class="mode-btn" onclick="selectMode('Other', this)">Other</button>
+</div>
+</div>
+<div style="margin-top:12px;">
+<p style="font-weight:bold; font-size:14px;">Select Map:</p>
+<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:6px;">
+<button class="map-btn active" onclick="selectMap('Warehouse', this)">Warehouse</button>
+<button class="map-btn" onclick="selectMap('Erangel', this)">Erangel</button>
+<button class="map-btn" onclick="selectMap('Arena', this)">Arena</button>
+</div>
+</div>
+<div style="margin-top:12px;">
+<p style="font-weight:bold; font-size:14px;">Entry Type:</p>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+<button class="entry-btn active" onclick="selectEntry('Free', this)">Free 🟢</button>
+<button class="entry-btn" onclick="selectEntry('Paid', this)">Paid 🔒</button>
+</div>
+</div>
+<button style="background:#f59e0b; margin-top:16px;" onclick="findOpponent()">🔍 Find Opponent</button>
+<button style="background:#dc2626;" onclick="backToMain()">⬅️ Back</button>
+</div>
+
+<div class="card hidden" id="team2v2Page">
+<h2>⚔️ 2v2 BATTLE</h2>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px;">
+<div>
+<p style="font-weight:bold; font-size:14px; text-align:center;">Team A</p>
+<div class="team-slot filled">👑 You</div>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+</div>
+<div>
+<p style="font-weight:bold; font-size:14px; text-align:center;">Team B</p>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+</div>
+</div>
+<button style="background:#f59e0b; margin-top:16px;" onclick="startTeamMatch('2v2')">🚀 Start Match</button>
+<button style="background:#dc2626;" onclick="backToMain()">⬅️ Back</button>
+</div>
+
+<div class="card hidden" id="team4v4Page">
+<h2>⚔️ 4v4 BATTLE</h2>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px;">
+<div>
+<p style="font-weight:bold; font-size:14px; text-align:center;">Team A</p>
+<div class="team-slot filled">👑 You</div>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+</div>
+<div>
+<p style="font-weight:bold; font-size:14px; text-align:center;">Team B</p>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+<div class="team-slot" onclick="fillSlot(this)">+ Invite</div>
+</div>
+</div>
+<button style="background:#f59e0b; margin-top:16px;" onclick="startTeamMatch('4v4')">🚀 Start Match</button>
+<button style="background:#dc2626;" onclick="backToMain()">⬅️ Back</button>
+</div>
+
+<div class="card hidden" id="matchRoomPage">
+<h2>⚔️ <span id="matchModeTitle">1v1 TDM</span></h2>
+<p style="text-align:center; color:#22c55e; font-weight:bold; margin-top:-10px;">✅ Room Created!</p>
+<div style="background:#273449; padding:14px; border-radius:10px; margin-top:12px;">
+<p style="margin:5px 0;">Room ID: <b id="matchRoomId">7283164</b> <span onclick="copyText('7283164')" style="cursor:pointer;">📋</span></p>
+<p style="margin:5px 0;">Password: <b id="matchPassword">1122</b> <span onclick="copyText('1122')" style="cursor:pointer;">📋</span></p>
+</div>
+<p style="text-align:center; margin-top:12px; color:#94a3b8; font-size:14px;">Match starts in</p>
+<div class="timer-text" id="matchTimer">05:00</div>
+<p id="selectedWinner" style="display:none;">You</p>
+<div style="display:flex; justify-content:space-around; margin-top:16px;">
+<div style="text-align:center;"><div style="font-size:36px;">👑</div><div style="font-weight:bold; font-size:14px;">You</div><div style="color:#22c55e; font-size:11px;">Ready</div></div>
+<div style="font-size:26px; align-self:center;">VS</div>
+<div style="text-align:center;"><div style="font-size:36px;">👤</div><div style="font-weight:bold; font-size:14px;">Unknown</div><div style="color:#94a3b8; font-size:11px;">Waiting...</div></div>
+</div>
+<button style="background:#dc2626;" onclick="cancelMatch()">Cancel Match</button>
+</div>
+
+<div class="card hidden" id="resultPage">
+<h2>🏆 Submit Result</h2>
+<div style="display:flex; gap:8px; margin-top:12px;">
+<button class="winner-tab active" onclick="switchResultTab('winner', this)" style="flex:1;">Winner</button>
+<button class="winner-tab" onclick="switchResultTab('screenshot', this)" style="flex:1;">Screenshot</button>
+</div>
+<p style="margin-top:14px; font-weight:bold; font-size:14px;">Select Winner:</p>
+<div style="background:#273449; padding:14px; border-radius:10px;">
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+<span style="font-size:14px;">👑 You (<span id="resultPlayerName">Aryan</span>)</span>
+<button class="winner-btn active" onclick="selectWinner('You', this)" style="width:auto; padding:6px 16px;">Select</button>
+</div>
+<div style="display:flex; justify-content:space-between; align-items:center;">
+<span style="font-size:14px;">👤 Opponent (Unknown)</span>
+<button class="winner-btn" onclick="selectWinner('Opponent', this)" style="width:auto; padding:6px 16px;">Select</button>
+</div>
+</div>
+<input type="file" id="resultScreenshot" accept="image/*" style="background:#273449; color:white; padding:12px; border-radius:8px; width:100%; font-size:13px; margin-top:12px;">
+<button style="background:#2563eb; margin-top:12px;" onclick="submitResult()">🏆 Submit Result</button>
+<button style="background:#dc2626;" onclick="backToMain()">⬅️ Back</button>
+</div>
+
+<div class="card hidden" id="walletPage">
+<h2>💰 My Wallet</h2>
+<div style="background:#16a34a; padding:18px; border-radius:12px; text-align:center;">
+<p style="margin:0; font-size:13px;">Available Balance</p>
+<h1 style="margin:5px 0; font-size:38px;">₹<span id="walletPageBalance">500</span></h1>
+</div>
+<input type="number" id="amountInput" placeholder="Enter amount (₹)" inputmode="numeric" style="margin-top:12px;">
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+<button style="background:#2563eb;" onclick="addMoney()">➕ Add Money</button>
+<button style="background:#dc2626;" onclick="withdrawMoney()">💸 Withdraw</button>
+</div>
+<h3 style="margin-top:20px; font-size:15px;">📜 Transaction History</h3>
+<div style="background:#273449; padding:14px; border-radius:10px; font-size:13px;">
+<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #475569;"><span>➕ Added Money</span><span style="color:#22c55e;">+ ₹500</span></div>
+<div style="display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid #475569;"><span>🎮 1v1 Match Entry</span><span style="color:#dc2626;">- ₹10</span></div>
+<div style="display:flex; justify-content:space-between; padding:6px 0;"><span>🎮 Classic Room Entry</span><span style="color:#dc2626;">- ₹20</span></div>
+</div>
+<h3 style="margin-top:20px; font-size:15px;">🎁 Refer & Earn</h3>
+<div style="background:#273449; padding:14px; border-radius:10px;">
+<p style="margin:0; font-size:13px;">Invite friends, earn ₹50 per referral!</p>
+<button style="background:#f59e0b; margin-top:10px;" onclick="referFriend()">📤 Share Referral Code</button>
+</div>
+<button style="background:#475569; margin-top:16px;" onclick="backToMain()">⬅️ Back</button>
+</div>
+
+<div class="card hidden" id="leaderboardPage">
+<h2>🏆 Leaderboard</h2>
+<div style="background:#273449; padding:12px; border-radius:10px; margin-top:12px;">
+<div class="lb-row"><div class="lb-rank">🥇</div><div class="lb-name">JONATHANx</div><div class="lb-wins">120 W</div><div class="lb-points">2400</div></div>
+<div class="lb-row"><div class="lb-rank">🥈</div><div class="lb-name">ScoutLive</div><div class="lb-wins">98 W</div><div class="lb-points">2100</div></div>
+<div class="lb-row"><div class="lb-rank">🥉</div><div class="lb-name">MortalOG</div><div class="lb-wins">89 W</div><div class="lb-points">1980</div></div>
+<div class="lb-row"><div class="lb-rank">4</div><div class="lb-name">AryanRajput</div><div class="lb-wins">76 W</div><div class="lb-points">1800</div></div>
+<div class="lb-row"><div class="lb-rank">5</div><div class="lb-name">GodLikeZ</div><div class="lb-wins">70 W</div><div class="lb-points">1650</div></div>
+<div class="lb-row"><div class="lb-rank">6</div><div class="lb-name">Neyoo</div><div class="lb-wins">65 W</div><div class="lb-points">1500</div></div>
+<div class="lb-row"><div class="lb-rank">7</div><div class="lb-name">Shadow</div><div class="lb-wins">60 W</div><div class="lb-points">1420</div></div>
+<div class="lb-row"><div class="lb-rank">8</div><div class="lb-name">ClutchGod</div><div class="lb-wins">58 W</div><div class="lb-points">1390</div></div>
+<div class="lb-row"><div class="lb-rank">9</div><div class="lb-name">LEGENDx</div><div class="lb-wins">50 W</div><div class="lb-points">1250</div></div>
+<div class="lb-row"><div class="lb-rank">10</div><div class="lb-name">KillerOP</div><div class="lb-wins">45 W</div><div class="lb-points">1100</div></div>
+</div>
+<button style="background:#475569; margin-top:16px;" onclick="backToMain()">⬅️ Back</button>
+</div>
+
+<div class="card hidden" id="adminPanel">
+<h2>🛠️ Admin Panel</h2>
+<div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:12px;">
+<div style="background:#273449; padding:12px; border-radius:10px; text-align:center;">
+<p style="margin:0; font-size:12px; color:#94a3b8;">Total Users</p>
+<h3 style="margin:5px 0; color:#60a5fa;" id="adminUsers">0</h3>
+</div>
+<div style="background:#273449; padding:12px; border-radius:10px; text-align:center;">
+<p style="margin:0; font-size:12px; color:#94a3b8;">Pending Results</p>
+<h3 style="margin:5px 0; color:#f59e0b;" id="adminPending">0</h3>
+</div>
+</div>
+<h3 style="margin-top:20px; font-size:15px;">📋 Pending Results</h3>
+<div id="pendingResultsList">
+<p style="color:#94a3b8; font-size:13px; text-align:center; padding:15px;">Loading...</p>
+</div>
+<button style="background:#475569; margin-top:16px;" onclick="adminLogout()">🚪 Admin Logout</button>
+</div>
+
+<div id="mainPage" class="hidden">
+
+<div class="card" style="display: flex; justify-content: space-between; align-items: center; padding: 14px;">
+<div style="display: flex; align-items: center; gap: 10px;">
+<div style="background: #3b82f6; width: 38px; height: 38px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 18px;">👤</div>
+<div>
+<div style="font-weight: bold; font-size: 15px;" id="headerName">Loading...</div>
+<div style="font-size: 11px; color: #94a3b8;">ID: 5552321980</div>
+</div>
+</div>
+<div style="background: #16a34a; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 14px; cursor:pointer;" onclick="showWallet()">₹ <span id="walletBalance">500</span></div>
+</div>
+
+<div class="card">
+<h2 style="text-align: left; margin-bottom: 12px; font-size: 16px;">BUILT FOR GAMERS</h2>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+<button class="game-btn btn-blue" onclick="showSection('1v1')">1v1<br><span style="font-size: 11px;">Solo Battle</span></button>
+<button class="game-btn btn-green" onclick="showSection('2v2')">2v2<br><span style="font-size: 11px;">Team Battle</span></button>
+<button class="game-btn btn-blue" onclick="showSection('4v4')">4v4<br><span style="font-size: 11px;">Squad Battle</span></button>
+<button class="game-btn btn-yellow" onclick="showSection('leaderboard')">🏆 RANK<br><span style="font-size: 11px;">Leaderboard</span></button>
+</div>
+</div>
+
+<div class="card profile">
+<h2>👤 My Profile</h2>
+<p>Name: <b id="showName"></b></p>
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="card">
+<h2>🔥 Available Rooms</h2>
+<div class="room">
+<h3>🏆 Classic Room</h3>
+<div class="info">👥 Players: 25 / 100<br>🗺️ Map: Erangel<br>🎯 Mode: Squad<br>⏰ Start: 8:00 PM<br>💰 Entry Fee: ₹20<br>🏆 Prize: ₹1500<br>🆔 Room ID: 123456<br>🔑 Password: 7890</div>
+<button class="join" onclick="joinRoom('Classic Room', '123456', '7890', 20)">Join Room</button>
+</div>
+<div class="room">
+<h3>⚡ TDM Room</h3>
+<div class="info">👥 Players: 8 / 10<br>🗺️ Map: Warehouse<br>🎯 Mode: TDM<br>⏰ Start: 9:00 PM<br>💰 Entry Fee: ₹10<br>🏆 Prize: ₹150<br>🆔 Room ID: 654321<br>🔑 Password: 4567</div>
+<button class="join" onclick="joinRoom('TDM Room', '654321', '4567', 10)">Join Room</button>
+</div>
+<div class="room">
+<h3>⚔️ 1v1 Match</h3>
+<div class="info">👤 Player 1 vs Player 2<br>🎯 Mode: 1v1<br>🗺️ Map: Warehouse<br>⏰ Start: 10:00 PM<br>💰 Entry Fee: ₹10<br>🏆 Prize: ₹180</div>
+<button class="join" onclick="joinRoom('1v1 Match', '777777', '1111', 10)">Join 1v1</button>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+function $(id) { return document.getElementById(id); }
+function show(id) { $(id).classList.remove('hidden'); }
+function hide(id) { $(id).classList.add('hidden'); }
+var allPages = ['loginBox','adminLoginBox','joinPage','battle1v1Page','team2v2Page','team4v4Page','matchRoomPage','resultPage','walletPage','leaderboardPage','adminPanel','mainPage'];
+function hideAll() { allPages.forEach(function(p){ $(p).classList.add('hidden'); }); }
+
+function login() {
+var name = $("username").value.trim();
+if (name === "") { alert("Please enter your name"); return; }
+localStorage.setItem("bgmiUser", name);
+showMainPage();
+}
+function showMainPage() {
+var name = localStorage.getItem("bgmiUser");
+var wallet = localStorage.getItem("bgmiWallet") || "500";
+hideAll();
+if (name) {
+show("mainPage");
+$("showName").innerText = name;
+$("headerName").innerText = name;
+$("walletBalance").innerText = wallet;
+} else { show("loginBox"); }
+}
+function logout() { localStorage.removeItem("bgmiUser"); location.reload(); }
+
+function showAdminLogin() { hideAll(); show("adminLoginBox"); }
+function adminLogin() {
+if ($("adminPassword").value === "admin123") {
+hideAll(); show("adminPanel"); loadAdminData();
+} else { alert("Wrong password!"); }
+}
+function adminLogout() { hideAll(); show("loginBox"); }
+async function loadAdminData() {
+$("adminUsers").innerText = "1";
+if (typeof getPendingResults === "function") {
+try {
+var results = await getPendingResults();
+$("adminPending").innerText = results.length;
+var list = $("pendingResultsList");
+list.innerHTML = "";
+if (results.length === 0) {
+list.innerHTML = '<p style="color:#94a3b8; font-size:13px; text-align:center; padding:15px;">No pending results</p>';
+} else {
+results.forEach(function(r) {
+var div = document.createElement("div");
+div.className = "result-row";
+div.innerHTML = '<div class="row-top"><span>👑 ' + r.winner + '</span><span style="color:#f59e0b; font-size:11px;">PENDING</span></div><div style="font-size:12px; color:#94a3b8; margin-bottom:8px;">' + r.player1 + ' vs ' + r.player2 + '</div><div class="row-bottom"><button style="background:#22c55e;" onclick="verifyResult(\'' + r.id + '\', \'approved\')">✅ Approve</button><button style="background:#dc2626;" onclick="verifyResult(\'' + r.id + '\', \'rejected\')">❌ Reject</button></div>';
+list.appendChild(div);
+});
+}
+} catch (e) { $("pendingResultsList").innerHTML = '<p style="color:#dc2626; font-size:13px; text-align:center; padding:15px;">Error loading</p>'; }
+}
+}
+async function verifyResult(id, status) {
+if (typeof updateResultStatus === "function") {
+await updateResultStatus(id, status);
+alert("Result " + status + "!");
+loadAdminData();
+}
+}
+
+function joinRoom(roomName, roomId, password, entryFee) {
+var userName = localStorage.getItem("bgmiUser");
+if (!userName) { alert("Please login first!"); return; }
+$("joinRoomName").innerText = roomName;
+$("joinRoomId").innerText = roomId;
+$("joinPassword").innerText = password;
+$("joinEntryFee").innerText = "₹" + entryFee;
+hideAll(); show("joinPage");
+if (typeof saveToFirebase === "function") saveToFirebase(userName, roomName, roomId, password, entryFee);
+}
+
+function showSection(sectionName) {
+if (sectionName === '1v1') { hideAll(); show("battle1v1Page"); }
+else if (sectionName === '2v2') { hideAll(); show("team2v2Page"); }
+else if (sectionName === '4v4') { hideAll(); show("team4v4Page"); }
+else if (sectionName === 'leaderboard') { hideAll(); show("leaderboardPage"); }
+}
+
+function selectMode(m, b) { document.querySelectorAll('.mode-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
+function selectMap(m, b) { document.querySelectorAll('.map-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
+function selectEntry(e, b) { document.querySelectorAll('.entry-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
+
+function fillSlot(el) { el.classList.add('filled'); el.innerText = '👤 Player'; }
+function startTeamMatch(type) { $("matchModeTitle").innerText = type + " Match"; hideAll(); show("matchRoomPage"); startMatchTimer(5); }
+
+function findOpponent() { $("matchModeTitle").innerText = "1v1 TDM"; hideAll(); show("matchRoomPage"); startMatchTimer(5); }
+var timerInterval;
+function startMatchTimer(minutes) {
+var totalSeconds = minutes * 60;
+clearInterval(timerInterval);
+$("matchTimer").innerText = formatTime(totalSeconds);
+timerInterval = setInterval(function() {
+totalSeconds--;
+if (totalSeconds <= 0) { clearInterval(timerInterval); $("matchTimer").innerText = "00:00"; showResultPage(); return; }
+$("matchTimer").innerText = formatTime(totalSeconds);
+}, 1000);
+}
+function formatTime(s) { var m = Math.floor(s/60); var x = s%60; return (m<10?'0'+m:m)+":"+(x<10?'0'+x:x); }
+function copyText(t) { if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){alert("Copied: "+t);}); else alert("Copied: "+t); }
+function cancelMatch() { clearInterval(timerInterval); hideAll(); show("mainPage"); }
+
+var selectedWinnerName = "You";
+function showResultPage() { clearInterval(timerInterval); hideAll(); show("resultPage"); var u = localStorage.getItem("bgmiUser") || "Player"; $("resultPlayerName").innerText = u; }
+function selectWinner(n, b) { document.querySelectorAll('.winner-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active'); selectedWinnerName = n; $("selectedWinner").innerText = n; }
+function switchResultTab(t, b) { document.querySelectorAll('.winner-tab').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }
+function submitResult() {
+var u = localStorage.getItem("bgmiUser") || "Player";
+if (typeof saveResultToFirebase === "function") saveResultToFirebase(u, "Unknown", selectedWinnerName);
+alert("✅ Result submitted!\nWinner: " + selectedWinnerName);
+hideAll(); show("mainPage");
+selectedWinnerName = "You";
+}
+
+function showWallet() { var b = localStorage.getItem("bgmiWallet") || "500"; $("walletPageBalance").innerText = b; hideAll(); show("walletPage"); }
+function addMoney() {
+var a = $("amountInput").value.trim();
+if (a === "" || isNaN(a) || parseInt(a) <= 0) { alert("Please enter a valid amount!"); return; }
+var c = parseInt(localStorage.getItem("bgmiWallet") || "500");
+var n = c + parseInt(a);
+localStorage.setItem("bgmiWallet", n);
+$("walletBalance").innerText = n; $("walletPageBalance").innerText = n;
+$("amountInput").value = "";
+alert("✅ ₹" + a + " added!\nNew Balance: ₹" + n);
+}
+function withdrawMoney() {
+var a = $("amountInput").value.trim();
+if (a === "" || isNaN(a) || parseInt(a) <= 0) { alert("Please enter a valid amount!"); return; }
+var c = parseInt(localStorage.getItem("bgmiWallet") || "500");
+if (parseInt(a) > c) { alert("❌ Insufficient balance!"); return; }
+var n = c - parseInt(a);
+localStorage.setItem("bgmiWallet", n);
+$("walletBalance").innerText = n; $("walletPageBalance").innerText = n;
+$("amountInput").value = "";
+alert("✅ ₹" + a + " withdrawn!\nNew Balance: ₹" + n);
+}
+function referFriend() { var u = localStorage.getItem("bgmiUser") || "Player"; var code = "BGMI" + u.substring(0,4).toUpperCase(); alert("Your Referral Code: " + code); }
+
+function backToMain() { clearInterval(timerInterval); hideAll(); show("mainPage"); }
+
+showMainPage();
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyB0w2hQEsJdhyz02A9iK5seyNqMIs77jj0",
+    authDomain: "bgmi-arena-71a11.firebaseapp.com",
+    projectId: "bgmi-arena-71a11",
+    storageBucket: "bgmi-arena-71a11.firebasestorage.app",
+    messagingSenderId: "983255287969",
+    appId: "1:983255287969:web:af110665c18c77b15848e0",
+    measurementId: "G-5LHHV8X4DS"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.saveToFirebase = async function(name, roomName, roomId, password, entryFee) {
+    try {
+        await addDoc(collection(db, "joinedPlayers"), {
+            name: name, roomName: roomName, roomId: roomId,
+            password: password, entryFee: entryFee, timestamp: new Date()
+        });
+        console.log("✅ Data Saved!");
+    } catch (e) { console.error("❌ Error:", e); }
+};
+
+window.saveResultToFirebase = async function(player1, player2, winner) {
+    try {
+        await addDoc(collection(db, "matchResults"), {
+            player1: player1, player2: player2, winner: winner,
+            status: "pending", timestamp: new Date()
+        });
+        console.log("✅ Result Saved!");
+    } catch (e) { console.error("❌ Error:", e); }
+};
+
+window.getPendingResults = async function() {
+    var results = [];
+    try {
+        var q = query(collection(db, "matchResults"), where("status", "==", "pending"));
+        var snap = await getDocs(q);
+        snap.forEach(function(d) {
+            var data = d.data();
+            results.push({ id: d.id, player1: data.player1, player2: data.player2, winner: data.winner });
+        });
+    } catch (e) { console.error("❌ Error:", e); }
+    return results;
+};
+
+window.updateResultStatus = async function(id, status) {
+    try {
+        await updateDoc(doc(db, "matchResults", id), { status: status });
+        console.log("✅ Result " + status);
+    } catch (e) { console.error("❌ Error:", e); }
+};
+</script>
+
+</body>
+</html>
