@@ -7,21 +7,32 @@
 <style>
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: white; }
-header { background: #1e293b; padding: 16px; text-align: center; }
-h1 { margin: 0; font-size: 24px; }
+header { background: #1e293b; padding: 14px; text-align: center; position: sticky; top: 0; z-index: 100; }
+h1 { margin: 0; font-size: 22px; }
 .container { max-width: 600px; margin: auto; padding: 12px; }
 .card { background: #1e293b; padding: 16px; margin-bottom: 12px; border-radius: 15px; }
 h2 { text-align: center; margin-top: 0; font-size: 19px; }
 input, select { width: 100%; padding: 13px; margin: 6px 0; border: 0; border-radius: 8px; font-size: 15px; background: #273449; color: white; }
 button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 8px; background: #2563eb; color: white; font-size: 15px; font-weight: 600; }
+button:active { transform: scale(0.98); }
 .hidden { display: none !important; }
 .room { background: #273449; padding: 14px; margin-top: 12px; border-radius: 12px; }
 .join { background: #16a34a; }
-.timer-text { text-align: center; color: #f59e0b; font-size: 40px; margin: 5px 0; font-weight: bold; }
+.timer-text { text-align: center; color: #f59e0b; font-size: 38px; margin: 5px 0; font-weight: bold; }
 .lb-row { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; }
 .lb-rank { width: 35px; font-weight: bold; color: #f59e0b; }
 .lb-name { flex: 1; font-size: 14px; }
 .lb-wins { color: #22c55e; font-size: 13px; margin-right: 10px; }
+.tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
+.tab-btn { flex: 1; padding: 12px; background: #273449; border-radius: 8px; text-align: center; font-weight: bold; cursor: pointer; font-size: 14px; }
+.tab-btn.active { background: #2563eb; }
+.detail-row { display: flex; justify-content: space-between; align-items: center; background: #1e293b; padding: 12px; border-radius: 10px; margin-bottom: 10px; }
+.detail-label { color: #94a3b8; font-size: 14px; }
+.detail-value { color: white; font-weight: bold; font-size: 16px; }
+.copy-btn { background: #2563eb; padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-left: 10px; cursor: pointer; border: 0; color: white; width: auto; }
+.big-btn { padding: 16px; font-size: 16px; font-weight: bold; border-radius: 12px; margin-top: 12px; }
+.open-bgmi-btn { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.loading-text { text-align: center; color: #94a3b8; padding: 15px; }
 </style>
 </head>
 <body>
@@ -30,6 +41,7 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 
 <div class="container">
 
+<!-- LOGIN PAGE -->
 <div class="card" id="loginBox">
 <h2>🔐 Login</h2>
 <input type="text" id="username" placeholder="Enter your name">
@@ -37,6 +49,7 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 <button style="background:#475569;" onclick="adminMode()">🛠️ Admin Login</button>
 </div>
 
+<!-- ADMIN LOGIN -->
 <div class="card hidden" id="adminBox">
 <h2>🛠️ Admin Login</h2>
 <input type="password" id="adminPassword" placeholder="Password">
@@ -44,16 +57,15 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 <button style="background:#475569;" onclick="showMain()">⬅️ Back</button>
 </div>
 
+<!-- ADMIN PANEL -->
 <div class="card hidden" id="adminPanel">
 <h2>🛠️ Admin Panel</h2>
 <h3 style="font-size:15px;">➕ Create Room</h3>
 <div style="background:#273449; padding:14px; border-radius:10px;">
 <input type="text" id="roomNameInput" placeholder="Room Name">
 <select id="roomModeInput">
-<option>Solo</option>
-<option>Duo</option>
-<option>Squad</option>
-<option>TDM</option>
+<option value="Classic">Classic</option>
+<option value="TDM">TDM</option>
 </select>
 <select id="roomMapInput">
 <option>Erangel</option>
@@ -73,7 +85,9 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 <button style="background:#dc2626;" onclick="adminLogout()">🚪 Logout</button>
 </div>
 
+<!-- MAIN PAGE -->
 <div id="mainPage" class="hidden">
+
 <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
 <div style="display:flex; align-items:center; gap:10px;">
 <div style="background:#3b82f6; width:38px; height:38px; border-radius:50%; display:flex; justify-content:center; align-items:center; font-size:18px;">👤</div>
@@ -84,21 +98,27 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 </div>
 <div style="background:#16a34a; padding:6px 12px; border-radius:20px; font-weight:bold; cursor:pointer;" onclick="showWallet()">₹ <span id="walletBalance">500</span></div>
 </div>
+
 <div class="card">
-<h2>👤 <span id="showName"></span></h2>
-<button style="background:#dc2626;" onclick="logout()">Logout</button>
+<h2 style="text-align:left; font-size:16px;">🔥 Available Rooms</h2>
+<div class="tab-bar">
+<div class="tab-btn active" id="tabClassic" onclick="switchTab('classic')">🏆 Classic</div>
+<div class="tab-btn" id="tabTDM" onclick="switchTab('tdm')">⚡ TDM</div>
 </div>
-<div class="card">
-<h2>🔥 Available Rooms</h2>
-<div id="roomsList">Loading...</div>
+<div id="roomsList" class="loading-text">Loading rooms...</div>
 </div>
+
 <div class="card">
 <button style="background:#ca8a04;" onclick="showLeaderboard()">🏆 Leaderboard</button>
 <button style="background:#8b5cf6;" onclick="showMatchHistory()">📜 Match History</button>
 <button style="background:#0ea5e9;" onclick="showNotifications()">🔔 Notifications</button>
-</div>
+<button style="background:#059669;" onclick="showHelp()">❓ Help</button>
+<button style="background:#dc2626;" onclick="logout()">🚪 Logout</button>
 </div>
 
+</div>
+
+<!-- JOIN INPUT PAGE -->
 <div class="card hidden" id="joinInputPage">
 <h2>🔐 Enter Room Details</h2>
 <p style="text-align:center; font-size:14px; color:#94a3b8;">Room: <b id="inputRoomName"></b></p>
@@ -108,28 +128,58 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 <input type="hidden" id="actualRoomPass">
 <input type="hidden" id="actualRoomFee">
 <input type="hidden" id="actualRoomName">
-<button style="background:#22c55e;" onclick="verifyJoin()">✅ Verify & Join</button>
+<button style="background:#22c55e;" onclick="verifyJoin()">✅ Verify & Pay ₹<span id="payAmount">50</span></button>
 <button style="background:#475569;" onclick="showMain()">⬅️ Back</button>
 </div>
 
-<div class="card hidden" id="joinPage">
-<h2>🎮 Join Room</h2>
-<p>Room: <b id="joinRoomName"></b></p>
-<p>ID: <b id="joinRoomId"></b></p>
-<p>Password: <b id="joinPassword"></b></p>
-<button style="background:#f59e0b;" onclick="startMatch()">✅ Start Match</button>
-<button onclick="showMain()">⬅️ Back</button>
-</div>
-
+<!-- MATCH ROOM -->
 <div class="card hidden" id="matchRoomPage">
 <h2>⚔️ Match Room</h2>
-<p style="text-align:center; color:#22c55e;">✅ Joined Successfully!</p>
-<p style="text-align:center; margin-top:12px; color:#94a3b8;">Match starts in</p>
-<div class="timer-text" id="matchTimer">05:00</div>
-<button id="submitResultBtn" class="hidden" style="background:#2563eb;" onclick="showResultPage()">🏆 Submit Result</button>
-<button style="background:#dc2626;" onclick="cancelMatch()">Cancel</button>
+<p style="text-align:center; color:#22c55e; font-weight:bold;">✅ Payment Successful!</p>
+
+<div style="background:#273449; padding:20px; border-radius:15px; margin-top:12px;">
+<div style="text-align:center; font-size:22px; font-weight:bold; color:#f59e0b; margin-bottom:20px;" id="matchRoomTitle">🏆 CLASSIC ROOM</div>
+
+<div class="detail-row">
+<span class="detail-label">🆔 Room ID</span>
+<div>
+<span class="detail-value" id="displayRoomId">123456</span>
+<button class="copy-btn" onclick="copyText('displayRoomId')">📋 Copy</button>
+</div>
 </div>
 
+<div class="detail-row">
+<span class="detail-label">🔑 Password</span>
+<div>
+<span class="detail-value" id="displayPassword">ABCD</span>
+<button class="copy-btn" onclick="copyText('displayPassword')">📋 Copy</button>
+</div>
+</div>
+
+<div style="text-align:center; color:#94a3b8; font-size:14px; margin-top:15px;">⏰ Match starts in</div>
+<div class="timer-text" id="matchTimer">05:00</div>
+
+<div style="background:#1e293b; padding:12px; border-radius:10px; margin-top:15px; margin-bottom:15px;">
+<p style="font-weight:bold; color:#f59e0b; margin-bottom:8px; font-size:14px;">📺 Custom Room Join Karne Ka Tarika:</p>
+<p style="font-size:13px; line-height:1.8; margin:0;">
+1️⃣ Room ID copy karein (📋)<br>
+2️⃣ Password copy karein (📋)<br>
+3️⃣ "OPEN BGMI" button dabayein<br>
+4️⃣ BGMI khulegi — Custom Room par jayein<br>
+5️⃣ Room ID paste karein<br>
+6️⃣ Password paste karein<br>
+7️⃣ "Join Room" dabayein<br>
+8️⃣ Match khelein! 🎮
+</p>
+</div>
+
+<button class="big-btn open-bgmi-btn" onclick="openBGMI()">🎮 OPEN BGMI & JOIN ROOM</button>
+<button id="submitResultBtn" class="big-btn hidden" style="background:#2563eb;" onclick="showResultPage()">🏆 SUBMIT RESULT</button>
+<button style="background:#475569;" onclick="cancelMatch()">⬅️ Back to Home</button>
+</div>
+</div>
+
+<!-- RESULT -->
 <div class="card hidden" id="resultPage">
 <h2>🏆 Submit Result</h2>
 <div style="background:#273449; padding:14px; border-radius:10px;">
@@ -139,6 +189,7 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 <button style="background:#475569;" onclick="showMain()">⬅️ Back</button>
 </div>
 
+<!-- WALLET -->
 <div class="card hidden" id="walletPage">
 <h2>💰 My Wallet</h2>
 <div style="background:#16a34a; padding:18px; border-radius:12px; text-align:center;">
@@ -153,6 +204,7 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 <button style="background:#475569; margin-top:16px;" onclick="showMain()">⬅️ Back</button>
 </div>
 
+<!-- LEADERBOARD -->
 <div class="card hidden" id="leaderboardPage">
 <h2>🏆 Leaderboard</h2>
 <div style="background:#273449; padding:12px; border-radius:10px;">
@@ -170,6 +222,7 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 <button style="background:#475569; margin-top:16px;" onclick="showMain()">⬅️ Back</button>
 </div>
 
+<!-- MATCH HISTORY -->
 <div class="card hidden" id="matchHistoryPage">
 <h2>📜 Match History</h2>
 <div id="historyList" style="background:#273449; padding:14px; border-radius:10px;">
@@ -178,10 +231,44 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 <button style="background:#475569; margin-top:16px;" onclick="showMain()">⬅️ Back</button>
 </div>
 
+<!-- NOTIFICATIONS -->
 <div class="card hidden" id="notificationsPage">
 <h2>🔔 Notifications</h2>
 <div id="notifList" style="background:#273449; padding:14px; border-radius:10px;">
 <p style="color:#94a3b8; text-align:center;">No new notifications.</p>
+</div>
+<button style="background:#475569; margin-top:16px;" onclick="showMain()">⬅️ Back</button>
+</div>
+
+<!-- HELP -->
+<div class="card hidden" id="helpPage">
+<h2>❓ Help & Support</h2>
+<div style="background:#273449; padding:14px; border-radius:10px;">
+<h3 style="font-size:15px; color:#f59e0b;">📖 Kaise Khelein:</h3>
+<p style="font-size:13px; line-height:1.8;">
+1. Wallet mein paise add karein<br>
+2. Room select karein (Classic/TDM)<br>
+3. "Join Room" dabayein<br>
+4. Room ID + Password daalein<br>
+5. Payment karein (wallet se)<br>
+6. Room ID + Password milega<br>
+7. "OPEN BGMI" dabayein<br>
+8. BGMI mein Custom Room join karein<br>
+9. Match khelein<br>
+10. Result submit karein<br>
+11. Prize jeetein! 🎉
+</p>
+</div>
+<div style="background:#273449; padding:14px; border-radius:10px; margin-top:12px;">
+<h3 style="font-size:15px; color:#f59e0b;">❓ FAQ:</h3>
+<p style="font-size:13px; line-height:1.8;">
+<b>Q: Room ID/Password kab milega?</b><br>
+A: Payment ke baad turant milega.<br><br>
+<b>Q: Payment kaise hoga?</b><br>
+A: Wallet se automatic katega.<br><br>
+<b>Q: BGMI nahi khul raha?</b><br>
+A: Phone mein BGMI install hona chahiye.
+</p>
 </div>
 <button style="background:#475569; margin-top:16px;" onclick="showMain()">⬅️ Back</button>
 </div>
@@ -192,8 +279,11 @@ button { width: 100%; padding: 13px; margin-top: 8px; border: 0; border-radius: 
 function $(id) { return document.getElementById(id); }
 function show(id) { $(id).classList.remove('hidden'); }
 function hide(id) { $(id).classList.add('hidden'); }
-var allPages = ['loginBox','adminBox','adminPanel','mainPage','joinInputPage','joinPage','matchRoomPage','resultPage','walletPage','leaderboardPage','matchHistoryPage','notificationsPage'];
+var allPages = ['loginBox','adminBox','adminPanel','mainPage','joinInputPage','matchRoomPage','resultPage','walletPage','leaderboardPage','matchHistoryPage','notificationsPage','helpPage'];
 function hideAll() { for (var i = 0; i < allPages.length; i++) { $(allPages[i]).classList.add('hidden'); } }
+
+var allRooms = [];
+var currentTab = 'classic';
 
 function login() {
     var name = $("username").value.trim();
@@ -208,9 +298,9 @@ function showMain() {
     hideAll();
     if (name) {
         show("mainPage");
-        $("showName").innerText = name;
         $("headerName").innerText = name;
         $("walletBalance").innerText = wallet;
+        $("roomsList").innerHTML = "Loading rooms...";
         loadRooms();
     } else {
         show("loginBox");
@@ -262,32 +352,60 @@ async function createRoom() {
 
 async function loadRooms() {
     if (typeof getLiveRooms !== "function") {
-        $("roomsList").innerHTML = '<p style="color:#94a3b8; text-align:center;">Firebase loading...</p>';
+        $("roomsList").innerHTML = '<p class="loading-text">Firebase loading...</p>';
         return;
     }
     try {
-        var rooms = await getLiveRooms();
-        var list = $("roomsList");
-        if (rooms.length === 0) {
-            list.innerHTML = '<p style="color:#94a3b8; text-align:center;">No rooms available.</p>';
-            return;
-        }
-        list.innerHTML = "";
-        for (var i = 0; i < rooms.length; i++) {
-            var r = rooms[i];
-            var div = document.createElement("div");
-            div.className = "room";
-            div.innerHTML = "<h3>🏆 " + r.roomName + "</h3>" +
-                "Mode: " + r.mode + "<br>" +
-                "Map: " + r.map + "<br>" +
-                "Start: " + r.startTime + "<br>" +
-                "Fee: ₹" + r.entryFee + "<br>" +
-                "Prize: ₹" + r.prize + "<br>" +
-                "<button class='join' onclick=\"openJoin('" + r.roomName + "','" + r.roomId + "','" + r.password + "','" + r.entryFee + "')\">Join Room</button>";
-            list.appendChild(div);
-        }
+        allRooms = await getLiveRooms();
+        displayRooms();
     } catch (e) {
         $("roomsList").innerHTML = '<p style="color:#dc2626; text-align:center;">Error loading rooms.</p>';
+    }
+}
+
+function switchTab(tab) {
+    currentTab = tab;
+    $("tabClassic").classList.remove("active");
+    $("tabTDM").classList.remove("active");
+    if (tab === 'classic') {
+        $("tabClassic").classList.add("active");
+    } else {
+        $("tabTDM").classList.add("active");
+    }
+    displayRooms();
+}
+
+function displayRooms() {
+    var list = $("roomsList");
+    var filtered = [];
+    for (var i = 0; i < allRooms.length; i++) {
+        var r = allRooms[i];
+        if (currentTab === 'classic' && r.mode === 'Classic') {
+            filtered.push(r);
+        } else if (currentTab === 'tdm' && r.mode === 'TDM') {
+            filtered.push(r);
+        }
+    }
+
+    if (filtered.length === 0) {
+        list.innerHTML = '<p class="loading-text">Is section mein koi room nahi hai.</p>';
+        return;
+    }
+
+    list.innerHTML = "";
+    for (var i = 0; i < filtered.length; i++) {
+        var r = filtered[i];
+        var div = document.createElement("div");
+        div.className = "room";
+        div.innerHTML = "<h3>🏆 " + r.roomName + "</h3>" +
+            "🎯 Mode: " + r.mode + "<br>" +
+            "🗺️ Map: " + r.map + "<br>" +
+            "⏰ Start: " + r.startTime + "<br>" +
+            "💰 Entry: ₹" + r.entryFee + "<br>" +
+            "🏆 Prize: ₹" + r.prize + "<br>" +
+            "👥 Slots: " + r.totalSlots + "<br>" +
+            "<button class='join' onclick=\"openJoin('" + r.roomName + "','" + r.roomId + "','" + r.password + "','" + r.entryFee + "')\">🎮 JOIN ROOM</button>";
+        list.appendChild(div);
     }
 }
 
@@ -301,6 +419,7 @@ function openJoin(name, id, pass, fee) {
     $("actualRoomPass").value = pass;
     $("actualRoomFee").value = fee;
     $("actualRoomName").value = name;
+    $("payAmount").innerText = fee;
 }
 
 function verifyJoin() {
@@ -331,18 +450,13 @@ function verifyJoin() {
     $("walletBalance").innerText = newBalance;
     saveHistory(name, "Joined", "₹" + fee + " deducted");
 
-    alert("✅ Joined!\n\n₹" + fee + " deducted.\nNew balance: ₹" + newBalance);
+    alert("✅ Payment Successful!\n\n₹" + fee + " deducted.\nNew balance: ₹" + newBalance + "\n\nAb aapko Room ID aur Password milega.");
 
-    hideAll();
-    show("joinPage");
-    $("joinRoomName").innerText = name;
-    $("joinRoomId").innerText = actualId;
-    $("joinPassword").innerText = actualPass;
-}
-
-function startMatch() {
     hideAll();
     show("matchRoomPage");
+    $("matchRoomTitle").innerText = "🏆 " + name.toUpperCase();
+    $("displayRoomId").innerText = actualId;
+    $("displayPassword").innerText = actualPass;
     $("submitResultBtn").classList.add("hidden");
     startTimer(5);
 }
@@ -368,6 +482,28 @@ function fmt(s) {
     var m = Math.floor(s / 60);
     var x = s % 60;
     return (m < 10 ? '0' + m : m) + ":" + (x < 10 ? '0' + x : x);
+}
+
+function copyText(id) {
+    var text = document.getElementById(id).innerText;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+            alert("✅ Copied: " + text);
+        });
+    } else {
+        alert("Copy: " + text);
+    }
+}
+
+function openBGMI() {
+    var bgmiPackage = "com.pubg.imobile";
+    var intentUrl = "intent://#Intent;package=" + bgmiPackage + ";end";
+    try { window.location.href = intentUrl; } catch(e) {}
+    setTimeout(function() {
+        if (document.hasFocus()) {
+            window.location.href = "https://play.google.com/store/apps/details?id=" + bgmiPackage;
+        }
+    }, 2500);
 }
 
 function cancelMatch() {
@@ -429,10 +565,8 @@ function withdrawMoney() {
     alert("✅ ₹" + a + " withdrawn!\nNew balance: ₹" + n);
 }
 
-function showLeaderboard() {
-    hideAll();
-    show("leaderboardPage");
-}
+function showLeaderboard() { hideAll(); show("leaderboardPage"); }
+function showHelp() { hideAll(); show("helpPage"); }
 
 function showMatchHistory() {
     hideAll();
@@ -440,7 +574,7 @@ function showMatchHistory() {
     var history = JSON.parse(localStorage.getItem("bgmiHistory") || "[]");
     var list = $("historyList");
     if (history.length === 0) {
-        list.innerHTML = '<p style="color:#94a3b8; text-align:center;">No match history yet.</p>';
+        list.innerHTML = '<p class="loading-text">No match history yet.</p>';
         return;
     }
     list.innerHTML = "";
@@ -460,7 +594,7 @@ function showNotifications() {
     var notifs = JSON.parse(localStorage.getItem("bgmiNotifs") || "[]");
     var list = $("notifList");
     if (notifs.length === 0) {
-        list.innerHTML = '<p style="color:#94a3b8; text-align:center;">No new notifications.</p>';
+        list.innerHTML = '<p class="loading-text">No new notifications.</p>';
         return;
     }
     list.innerHTML = "";
@@ -482,16 +616,6 @@ function saveHistory(title, desc, extra) {
         date: new Date().toLocaleString()
     });
     localStorage.setItem("bgmiHistory", JSON.stringify(history));
-}
-
-function addNotification(title, desc) {
-    var notifs = JSON.parse(localStorage.getItem("bgmiNotifs") || "[]");
-    notifs.push({
-        title: title,
-        desc: desc,
-        date: new Date().toLocaleString()
-    });
-    localStorage.setItem("bgmiNotifs", JSON.stringify(notifs));
 }
 
 showMain();
